@@ -4,59 +4,58 @@
 
 Написать gRPC сервис обертку над nmap с использованием следующего скрипта
 https://github.com/vulnersCom/nmap-vulners и предлагаемого API:
+```sh
+syntax = "proto3";
 
->syntax = "proto3";
+package netvuln.v1;
 
->package netvuln.v1;
+service NetVulnService {
 
->service NetVulnService {
+ rpc CheckVuln(CheckVulnRequest) returns (CheckVulnResponse)
 
-> rpc CheckVuln(CheckVulnRequest) returns (CheckVulnResponse)
+}
 
->}
+message CheckVulnRequest {
 
->message CheckVulnRequest {
+ repeated string targets = 1; // IP addresses
 
-> repeated string targets = 1; // IP addresses
+ repeated int32 tcp_port = 2; // only TCP ports
 
-> repeated int32 tcp_port = 2; // only TCP ports
+}
 
->}
+ message CheckVulnResponse {
+ repeated TargetsReuslt results = 1;
 
->message CheckVulnResponse {
+}
 
-> repeated TargetsReuslt results = 1;
+message TargetResult {
 
->}
+ string target = 1; // target IP
 
->message TargetResult {
+ repeated Service services = 2
 
-> string target = 1; // target IP
+}
 
-> repeated Service services = 2
+message Service {
 
->}
+ string name = 1;
 
->message Service {
+ string version = 2;
 
-> string name = 1;
+ int32 tcp_port = 3;
 
-> string version = 2;
+ repeated Vulnerability vulns = 4;
 
-> int32 tcp_port = 3;
+}
 
-> repeated Vulnerability vulns = 4;
+message {
 
->}
+ string identifier = 1;
 
->message {
+ float cvss_score = 2;
 
-> string identifier = 1;
-
-> float cvss_score = 2;
-
->}
-
+}
+```
 
 Библиотеки:
 
