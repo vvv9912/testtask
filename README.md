@@ -86,7 +86,7 @@ sudo apt install nmap
 ```
     - Установить клиент Evans https://github.com/ktr0731/evans
 
-    - В вести комманду 
+    - Ввести комманду 
 ```sh
 ./evans ~/Programming/Go/testtask/proto/nmap.proto -p 8080
 ```
