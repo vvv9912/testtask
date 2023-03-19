@@ -11,7 +11,6 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
-	"testtask/server"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -71,7 +70,7 @@ type UnsafeNetVulnServiceServer interface {
 	mustEmbedUnimplementedNetVulnServiceServer()
 }
 
-func RegisterNetVulnServiceServer(s grpc.ServiceRegistrar, srv *server.GRPCServer) {
+func RegisterNetVulnServiceServer(s grpc.ServiceRegistrar, srv NetVulnServiceServer) {
 	s.RegisterService(&NetVulnService_ServiceDesc, srv)
 }
 

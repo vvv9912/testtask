@@ -1,10 +1,15 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"testtask/server"
+)
 
 func main() {
-	fmt.Println("hello")
-	var a []int
-	a = append(a, 1)
-
+	addr := ":8080"
+	fmt.Println(addr)
+	err := server.ServerStart(addr)
+	if err != nil {
+		fmt.Println(err)
+	}
 }

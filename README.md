@@ -76,3 +76,21 @@ message {
   - make lint – запуск линтера
 
   - make test – запуск тестов
+
+## How use
+Пример на ос ubuntu с использованием в виде клиента gRPC - "EVANS"
+
+    - Установить библиотеку nmap
+```sh
+sudo apt install nmap
+```
+    - Установить клиент Evans https://github.com/ktr0731/evans
+
+    - В вести комманду 
+```sh
+./evans ~/Programming/Go/testtask/proto/nmap.proto -p 8080
+```
+    - Вызвать метод 
+```sh
+call CheckVuln
+```
