@@ -80,17 +80,17 @@ message {
 ## How use
 Пример на ос ubuntu с использованием в виде клиента gRPC - "EVANS"
 
-    - Установить библиотеку nmap
+  - Установить библиотеку nmap
 ```sh
 sudo apt install nmap
 ```
-    - Установить клиент Evans https://github.com/ktr0731/evans
+  - Установить клиент Evans https://github.com/ktr0731/evans
 
-    - Ввести комманду 
+  - Ввести комманду 
 ```sh
 ./evans ~/Programming/Go/testtask/proto/nmap.proto -p 8080
 ```
-    - Вызвать метод 
+  - Вызвать метод 
 ```sh
 call CheckVuln
 ```
