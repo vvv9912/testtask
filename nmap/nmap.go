@@ -31,7 +31,7 @@ func Scanner(targets []string, tcpPorts []int32) ([]*proto.TargetResult, error) 
 		nmap.WithScripts("vulners"), //Для каждого доступного CPE скрипт выводит известные vuln (ссылки на соответствующую информацию) и соответствующие оценки CVSS.
 		nmap.WithServiceInfo(),
 		nmap.WithVersionAll(),
-	)
+	) //не сч закрытые порты
 	if err != nil {
 		log.Fatalf("unable to create nmap scanner: %v", err)
 	}
