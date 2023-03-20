@@ -24,12 +24,9 @@ func ServerStart(addr string) error {
 	//создаем сервер
 	server := grpc.NewServer()
 	//добавляем экстрадер
-	//srv := NewServer()
-
-	var srv *GRPCServer = &GRPCServer{}
+	srv := NewServer()
 	proto.RegisterNetVulnServiceServer(server, srv)
 	//
-	//addr := ":8080" //todo передавать
 	list, err := net.Listen("tcp", addr)
 	if err != nil {
 		log.Fatal(err)
@@ -46,6 +43,10 @@ func ServerStart(addr string) error {
 func (s *GRPCServer) CheckVuln(ctx context.Context, request *proto.CheckVulnRequest) (*proto.CheckVulnResponse, error) {
 	targets := request.GetTargets()
 	tcpPorts := request.GetTcpPort()
-	nmap.Scanner(targets, tcpPorts[0])
-	return &proto.CheckVulnResponse{Results: nil}, nil
+	TargRes, err := nmap.Scanner(targets, tcpPorts)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return &proto.CheckVulnResponse{Results: TargRes}, nil
 }
