@@ -85,13 +85,19 @@ message {
 sudo apt install nmap
 ```
   - Установить клиент Evans https://github.com/ktr0731/evans
-
+  - Собрать и запустить проект teststak
+```sh
+make build
+make run
+```
   - Запустить Evans следующей командой
 ```sh
-./evans ~/Programming/Go/testtask/proto/nmap.proto -p 8080
+evans {Путь proto file} -p {port} (например: ./evans ~/Programming/Go/testtask/proto/nmap.proto -p 8080) 
 ```
   - Вызвать метод 
 ```sh
 call CheckVuln
 ```
  - Ввести host, port и ожидать результата
+Пример работы:
+![image](https://user-images.githubusercontent.com/38299755/226746872-6c265588-4d5e-4634-8c88-c137750f3409.png)
