@@ -94,3 +94,4 @@ sudo apt install nmap
 ```sh
 call CheckVuln
 ```
+ - Ввести host, port и ожидать результата
