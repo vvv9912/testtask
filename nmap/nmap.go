@@ -2,27 +2,11 @@ package nmap
 
 //https://nmap.org/man/ru/man-port-scanning-techniques.html
 import (
-	"fmt"
 	"github.com/Ullaakut/nmap"
 	"github.com/sirupsen/logrus"
 	"strconv"
 	"testtask/proto"
 )
-
-//type TargetRes struct {
-//	Target  string
-//	Service services
-//}
-//type services struct {
-//	Name          string
-//	Version       string
-//	TcpPort       int32
-//	Vulnerability vulns
-//}
-//type vulns struct {
-//	Identifier string
-//	Cvss_score float64
-//}
 
 func Scanner(targets []string, tcpPorts []int32) ([]*proto.TargetResult, error) {
 	scanner, err := nmap.NewScanner(
@@ -31,6 +15,19 @@ func Scanner(targets []string, tcpPorts []int32) ([]*proto.TargetResult, error) 
 		nmap.WithScripts("vulners"), //Для каждого доступного CPE скрипт выводит известные vuln (ссылки на соответствующую информацию) и соответствующие оценки CVSS.
 		nmap.WithServiceInfo(),
 		nmap.WithVersionAll(),
+		nmap.WithFilterPort(func(p nmap.Port) bool {
+			// Filter out no open ports.
+			return p.State.String() == "open"
+		}),
+		nmap.WithFilterHost(func(h nmap.Host) bool {
+			// Filter out hosts with no open ports.
+			for idx := range h.Ports {
+				if h.Ports[idx].Status() == "open" {
+					return true
+				}
+			}
+			return false
+		}),
 	) //не сч закрытые порты
 	if err != nil {
 		logrus.WithFields(
@@ -66,24 +63,59 @@ func Scanner(targets []string, tcpPorts []int32) ([]*proto.TargetResult, error) 
 			continue
 		}
 
-		fmt.Printf("Host %q:\n", host.Addresses[0])
 		target := &proto.TargetResult{Target: host.Addresses[0].Addr}
 		services := make([]*proto.Service, 0)
 		for _, port := range host.Ports {
-			fmt.Printf("\tPort %d/%s %s %s\n", port.ID, port.Protocol, port.State, port.Service.Name)
-			services = append(services, &proto.Service{Name: port.Service.Name, TcpPort: int32(port.ID)})
+			var version string
+			if len(port.Service.Product) != 0 {
+				version = port.Service.Version
+			}
+
+			vulner := make([]*proto.Vulnerability, 0)
+			for _, v := range port.Scripts {
+				for _, t := range v.Tables {
+					for _, tt := range t.Tables {
+						//распарсить xml
+						vulner = append(vulner, parsvulns(&tt))
+					}
+				}
+			}
+			logrus.Infof("\tPort %d/%s %s %s\n", port.ID, port.Protocol, port.State, port.Service.Name)
+
+			services = append(services, &proto.Service{Name: port.Service.Name, TcpPort: int32(port.ID), Version: version, Vulns: vulner})
 		}
 		target.Services = services
 		TarRes = append(TarRes, target)
 	}
-
-	//fmt.Printf("Nmap done: %d hosts up scanned in %3f seconds\n", len(result.Hosts), result.Stats.Finished.Elapsed)
+	logrus.Infof("Nmap done: %d hosts up scanned in %3f seconds\n", len(result.Hosts), result.Stats.Finished.Elapsed)
 	return TarRes, nil
 }
 
-func arrInt32toArrStr(arr []int32) []string {
-	arrInt := make([]int32, len(arr))
-	copy(arrInt, arr)
+func parsvulns(table *nmap.Table) *proto.Vulnerability {
+	var id string
+	var cvss float32
+	for _, v := range table.Elements {
+		switch v.Key {
+		case "cvss":
+			cvss64, err := strconv.ParseFloat(v.Value, 32)
+			if err != nil {
+				logrus.WithFields(
+					logrus.Fields{
+						"package": "nmap",
+						"func":    "parsvulns",
+						"method":  "ParseFloat",
+					}).Error(err)
+			} else {
+				cvss = float32(cvss64)
+			}
+		case "id":
+			id = v.Value
+		}
+	}
+	return &proto.Vulnerability{Identifier: id, CvssScore: cvss}
+}
+
+func arrInt32toArrStr(arrInt []int32) []string {
 	arrStr := make([]string, len(arrInt))
 	for i := range arrInt {
 		arrStr[i] = strconv.Itoa(int(arrInt[i]))

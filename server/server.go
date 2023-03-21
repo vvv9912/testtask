@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"net"
@@ -37,6 +38,7 @@ func ServerStart(addr string, done chan bool) error {
 			}).Fatal(err)
 	}
 	go func() {
+		logrus.Info("server is running")
 		err = server.Serve(list)
 		if err != nil {
 			logrus.WithFields(
@@ -63,15 +65,34 @@ func ServerStart(addr string, done chan bool) error {
 func (s *GRPCServer) CheckVuln(ctx context.Context, request *proto.CheckVulnRequest) (*proto.CheckVulnResponse, error) {
 	targets := request.GetTargets()
 	tcpPorts := request.GetTcpPort()
-	targRes, err := nmap.Scanner(targets, tcpPorts)
-	if err != nil {
+	chanTargRes := make(chan []*proto.TargetResult)
+	go func(targets []string, tcpPorts []int32) {
+		targRes, err := nmap.Scanner(targets, tcpPorts)
+		if err != nil {
+			logrus.WithFields(
+				logrus.Fields{
+					"package": "server",
+					"func":    "CheckVuln",
+					"method":  "Scanner",
+				}).Fatal(err)
+			chanTargRes <- nil
+		}
+		chanTargRes <- targRes
+	}(targets, tcpPorts)
+
+	var targres []*proto.TargetResult
+	select {
+	case <-ctx.Done():
 		logrus.WithFields(
 			logrus.Fields{
 				"package": "server",
 				"func":    "CheckVuln",
 				"method":  "Scanner",
-			}).Fatal(err)
+			}).Info("cancellation of the request")
+		return nil, fmt.Errorf("cancellation of the request")
+	case targres = <-chanTargRes:
+
 	}
 
-	return &proto.CheckVulnResponse{Results: targRes}, nil
+	return &proto.CheckVulnResponse{Results: targres}, nil
 }
