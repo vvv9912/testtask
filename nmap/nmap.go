@@ -4,25 +4,25 @@ package nmap
 import (
 	"fmt"
 	"github.com/Ullaakut/nmap"
-	"log"
+	"github.com/sirupsen/logrus"
 	"strconv"
 	"testtask/proto"
 )
 
-type TargetRes struct {
-	Target  string
-	Service services
-}
-type services struct {
-	Name          string
-	Version       string
-	TcpPort       int32
-	Vulnerability vulns
-}
-type vulns struct {
-	Identifier string
-	Cvss_score float64
-}
+//type TargetRes struct {
+//	Target  string
+//	Service services
+//}
+//type services struct {
+//	Name          string
+//	Version       string
+//	TcpPort       int32
+//	Vulnerability vulns
+//}
+//type vulns struct {
+//	Identifier string
+//	Cvss_score float64
+//}
 
 func Scanner(targets []string, tcpPorts []int32) ([]*proto.TargetResult, error) {
 	scanner, err := nmap.NewScanner(
@@ -33,15 +33,31 @@ func Scanner(targets []string, tcpPorts []int32) ([]*proto.TargetResult, error) 
 		nmap.WithVersionAll(),
 	) //не сч закрытые порты
 	if err != nil {
-		log.Fatalf("unable to create nmap scanner: %v", err)
+		logrus.WithFields(
+			logrus.Fields{
+				"package": "nmap",
+				"func":    "Scanner",
+				"method":  "NewScanner",
+			}).Fatalf("unable to create nmap scanner: %v", err)
+
 	}
 	result, warnings, err := scanner.Run()
 	if err != nil {
-		log.Fatalf("unable to run nmap scan: %v", err)
+		logrus.WithFields(
+			logrus.Fields{
+				"package": "nmap",
+				"func":    "Scanner",
+				"method":  "Run",
+			}).Fatalf("unable to run nmap scan: %v", err)
 	}
 
 	if warnings != nil {
-		log.Printf("Warnings: \n %v", warnings)
+		logrus.WithFields(
+			logrus.Fields{
+				"package": "nmap",
+				"func":    "Scanner",
+				"method":  "Run",
+			}).Warningf("Warnings: \n %v", warnings)
 	}
 	// Use the results to print an example output
 	TarRes := make([]*proto.TargetResult, 0)
@@ -61,7 +77,7 @@ func Scanner(targets []string, tcpPorts []int32) ([]*proto.TargetResult, error) 
 		TarRes = append(TarRes, target)
 	}
 
-	fmt.Printf("Nmap done: %d hosts up scanned in %3f seconds\n", len(result.Hosts), result.Stats.Finished.Elapsed)
+	//fmt.Printf("Nmap done: %d hosts up scanned in %3f seconds\n", len(result.Hosts), result.Stats.Finished.Elapsed)
 	return TarRes, nil
 }
 

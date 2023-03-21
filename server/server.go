@@ -2,8 +2,8 @@ package server
 
 import (
 	"context"
+	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
-	"log"
 	"net"
 	"testtask/nmap"
 	"testtask/proto"
@@ -20,7 +20,7 @@ func NewServer() *GRPCServer {
 }
 
 // server start
-func ServerStart(addr string) error {
+func ServerStart(addr string, done chan bool) error {
 	//создаем сервер
 	server := grpc.NewServer()
 	//добавляем экстрадер
@@ -29,24 +29,49 @@ func ServerStart(addr string) error {
 	//
 	list, err := net.Listen("tcp", addr)
 	if err != nil {
-		log.Fatal(err)
+		logrus.WithFields(
+			logrus.Fields{
+				"package": "server",
+				"func":    "ServerStart",
+				"method":  "Listen",
+			}).Fatal(err)
 	}
-	//todo В горутину
-	err = server.Serve(list)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return nil
+	go func() {
+		err = server.Serve(list)
+		if err != nil {
+			logrus.WithFields(
+				logrus.Fields{
+					"package": "server",
+					"func":    "ServerStart",
+					"method":  "Serve",
+				}).Fatal(err)
+		}
 
+	}()
+	for {
+		select {
+		case <-done:
+			server.Stop()
+			return nil
+		default:
+
+		}
+	}
+	//return nil
 }
 
 func (s *GRPCServer) CheckVuln(ctx context.Context, request *proto.CheckVulnRequest) (*proto.CheckVulnResponse, error) {
 	targets := request.GetTargets()
 	tcpPorts := request.GetTcpPort()
-	TargRes, err := nmap.Scanner(targets, tcpPorts)
+	targRes, err := nmap.Scanner(targets, tcpPorts)
 	if err != nil {
-		log.Fatal(err)
+		logrus.WithFields(
+			logrus.Fields{
+				"package": "server",
+				"func":    "CheckVuln",
+				"method":  "Scanner",
+			}).Fatal(err)
 	}
 
-	return &proto.CheckVulnResponse{Results: TargRes}, nil
+	return &proto.CheckVulnResponse{Results: targRes}, nil
 }
